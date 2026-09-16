@@ -1,0 +1,45 @@
+%% 场景 C · barge-in（由 trace 自动生成）
+sequenceDiagram
+    autonumber
+    participant USER as User
+    participant VAD as VAD
+    participant ORC as Orchestrator
+    participant TTS as TTS
+    participant PLR as Player
+    participant SINK as Sink
+    USER->>VAD: 0.220s · 语音能量上升
+    USER-->>VAD: 1.240s · 静音开始
+    VAD->>ORC: 1.640s · endpoint committed (400.0ms / 阈值 400.0ms)
+    ORC->>TTS: 1.700s · start gen=1 (fence=0)
+    TTS->>PLR: 2.000s · chunk ＃0 (754.0ms)
+    PLR->>SINK: 2.000s · enqueue ＃0 (depth 1/20)
+    SINK->>USER: 2.000s · 开始出声 gen=1
+    TTS->>PLR: 2.060s · chunk ＃1 (1102.0ms)
+    PLR->>SINK: 2.060s · enqueue ＃1 (depth 1/20)
+    TTS->>PLR: 2.120s · chunk ＃2 (1102.0ms)
+    PLR->>SINK: 2.120s · enqueue ＃2 (depth 2/20)
+    TTS->>PLR: 2.180s · chunk ＃3 (1102.0ms)
+    PLR->>SINK: 2.180s · enqueue ＃3 (depth 3/20)
+    USER->>VAD: 3.220s · 语音能量上升
+    VAD->>ORC: 3.220s · barge-in candidate (检测滞后 20.0ms)
+    ORC->>SINK: 3.220s · pause() 生效，滞后 {effective_lag_ms}ms
+    ORC->>SINK: 3.240s · pause() 生效，滞后 20.0ms
+    VAD->>ORC: 3.380s · confirmed (160.0ms ≥ 150.0ms)
+    ORC->>TTS: 3.380s · cancel gen=1（flush 前已 fence++）
+    Note over ORC: 结算 gen=1：听到 20/70 字符，播出 1234.0ms，interrupted=True
+    TTS--)PLR: 3.440s · 迟到 chunk gen=1 → DROPPED
+    TTS--)PLR: 3.500s · 迟到 chunk gen=1 → DROPPED
+    USER-->>VAD: 4.740s · 静音开始
+    VAD->>ORC: 5.160s · endpoint committed (420.0ms / 阈值 400.0ms)
+    ORC->>TTS: 5.220s · start gen=2 (fence=2)
+    TTS->>PLR: 5.520s · chunk ＃0 (812.0ms)
+    PLR->>SINK: 5.520s · enqueue ＃0 (depth 1/20)
+    SINK->>USER: 5.520s · 开始出声 gen=2
+    TTS->>PLR: 5.580s · chunk ＃1 (812.0ms)
+    PLR->>SINK: 5.580s · enqueue ＃1 (depth 1/20)
+    TTS->>PLR: 5.640s · chunk ＃2 (1160.0ms)
+    PLR->>SINK: 5.640s · enqueue ＃2 (depth 2/20)
+    TTS->>PLR: 5.700s · chunk ＃3 (522.0ms)
+    PLR->>SINK: 5.700s · enqueue ＃3 (depth 3/20)
+    Note over ORC: 结算 gen=2：听到 57/57 字符，播出 3306.0ms，interrupted=False
+    Note over ORC: session closed（残留任务 []）
